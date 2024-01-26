@@ -19,8 +19,7 @@ import flixel.tweens.FlxTween;
 import flixel.tweens.misc.NumTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
-import hxcodec.VideoHandler;
-import hxcodec.VideoSprite;
+import hxcodec.flixel.FlxVideoSprite as VideoSprite;
 import lime.net.curl.CURLCode;
 import openfl.filters.ShaderFilter;
 import sys.FileSystem;
@@ -339,80 +338,77 @@ class StoryMenuState extends MusicBeatSubstate
 		FlxG.sound.play(Paths.sound('confirmMenu'));
 		FlxG.camera.flash(FlxColor.RED, 0.5);
 		new FlxTimer().start(1, function(tmr:FlxTimer)
-			{
-		FlxG.sound.play(Paths.sound('riser'), 1);
-		var bloom:BloomShader = MainMenuState.instance.bloom;
-		bloom.Size.value = [0];
-		bloom.dim.value = [.8];
-
-		var twn1:NumTween;
-		var twn2:NumTween;
-
-		twn1 = FlxTween.num(0, 2, 2, {
-			onUpdate: (_) -> {
-				bloom.Size.value = [twn1.value];
-			}
-		});
-
-		twn2 = FlxTween.num(.8, 0.1, 2, {
-			onUpdate: (_) -> {
-				bloom.dim.value = [twn2.value];
-			}
-		});
-
-		for (i in 0...10){
-			new FlxTimer().start(0.2 * i, function(tmr:FlxTimer)
-				{
-					FlxG.camera.shake(0.0004 * i, 0.2);
-				});
-		}
-		FlxTween.tween(FlxG.camera, {zoom: 1.3}, 2, {ease: FlxEase.circIn});
-		FlxTween.tween(FlxG.sound.music, {volume: 0}, 2, {ease: FlxEase.circIn});
-		PlayState.storyPlaylist = ['Its a me', 'Starman Slaughter'];
-		PlayState.SONG = Song.loadFromJson(PlayState.storyPlaylist[0].toLowerCase(), PlayState.storyPlaylist[0].toLowerCase());
-		PauseSubState.tengo = 'its-a-me';
-		PlayState.storyWeek = 0;
-		PlayState.campaignScore = 0;
-		PlayState.campaignMisses = 0;
-		new FlxTimer().start(3, function(tmr:FlxTimer)
 		{
-			FlxG.camera.alpha = 0;
-			LoadingState.loadAndSwitchState(new PlayState(), true);
-		});
+			FlxG.sound.play(Paths.sound('riser'), 1);
+			var bloom:BloomShader = MainMenuState.instance.bloom;
+			bloom.Size.value = [0];
+			bloom.dim.value = [.8];
+
+			var twn1:NumTween;
+			var twn2:NumTween;
+
+			twn1 = FlxTween.num(0, 2, 2, {
+				onUpdate: (_) -> {
+					bloom.Size.value = [twn1.value];
+				}
+			});
+
+			twn2 = FlxTween.num(.8, 0.1, 2, {
+				onUpdate: (_) -> {
+					bloom.dim.value = [twn2.value];
+				}
+			});
+
+			for (i in 0...10){
+				new FlxTimer().start(0.2 * i, function(tmr:FlxTimer)
+					{
+						FlxG.camera.shake(0.0004 * i, 0.2);
+					});
+			}
+			FlxTween.tween(FlxG.camera, {zoom: 1.3}, 2, {ease: FlxEase.circIn});
+			FlxTween.tween(FlxG.sound.music, {volume: 0}, 2, {ease: FlxEase.circIn});
+			PlayState.storyPlaylist = ['Its a me', 'Starman Slaughter'];
+			PlayState.SONG = Song.loadFromJson(PlayState.storyPlaylist[0].toLowerCase(), PlayState.storyPlaylist[0].toLowerCase());
+			PauseSubState.tengo = 'its-a-me';
+			PlayState.storyWeek = 0;
+			PlayState.campaignScore = 0;
+			PlayState.campaignMisses = 0;
+			new FlxTimer().start(3, function(tmr:FlxTimer)
+			{
+				FlxG.camera.alpha = 0;
+				LoadingState.loadAndSwitchState(new PlayState(), true);
+			});
 		});
 	}
 
 	public function startVideo(name:String):Void
-		{
+	{
 		FlxTween.tween(FlxG.sound.music, {volume: 0}, 1, {ease: FlxEase.circIn});
 
 		add(bg);
 		FlxTween.tween(bg, {alpha: 1}, 1);
 	
 		new FlxTimer().start(1.2, function(tmr:FlxTimer)
-			{
-				inCutscene = true;
-				MainMenuState.instance.lerpCamZoom = false;
-				FlxG.camera.zoom = 1;
-				vid = new VideoSprite();
-				vid.scrollFactor.set(0, 0);
-				vid.playVideo(Paths.video(name));
-				
-				add(vid);
-
-				FlxG.camera.filtersEnabled = false;
-				vid.finishCallback = function()
-				{
-					finishVideo();
-				}
-				return;
-			}
-			);
+		{
+			inCutscene = true;
+			MainMenuState.instance.lerpCamZoom = false;
+			FlxG.camera.zoom = 1;
+			vid = new VideoSprite();
+			vid.scrollFactor.set(0, 0);
+			vid.bitmap.play(Paths.video(name));
 			
-		}
+			add(vid);
+
+			FlxG.camera.filtersEnabled = false;
+			vid.bitmap.onEndReached.add(finishVideo);
+			return;
+		});
+			
+	}
 
 	public function finishVideo():Void{
 		FlxG.camera.filtersEnabled = true;
+		vid.bitmap.dispose();
 		vid.destroy();
 		new FlxTimer().start(1, function(tmr:FlxTimer)
 			{

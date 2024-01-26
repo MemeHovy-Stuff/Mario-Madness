@@ -50,8 +50,7 @@ import flixel.util.FlxStringUtil;
 import flixel.util.FlxTimer;
 import haxe.Json;
 import haxe.Timer;
-import hxcodec.VideoHandler;
-import hxcodec.VideoSprite;
+import hxcodec.flixel.FlxVideoSprite as VideoSprite;
 import lime.app.Application;
 import lime.utils.Assets;
 import modchart.*;
@@ -1513,14 +1512,14 @@ class PlayState extends MusicBeatState
 					add(funnylayer0);
 
 					var vid:VideoSprite = new VideoSprite();
-					vid.playVideo(Paths.video('powerdownscene'));
+					vid.bitmap.play(Paths.video('powerdownscene'));
 					vid.cameras = [camHUD];
 					vid.visible = false;
 					add(vid);
-					vid.finishCallback = function()
-						{
-							vid.destroy();
-						}
+					vid.bitmap.onEndReached.add(function(){
+						vid.bitmap.dispose();
+						vid.destroy();
+					});
 
 					midsongVid = new VideoSprite();
 					midsongVid.cameras = [camHUD];
@@ -4143,14 +4142,14 @@ class PlayState extends MusicBeatState
 				warningPopup.screenCenter();
 
 				var vid:VideoSprite = new VideoSprite();
-				vid.playVideo(Paths.video('luigifuckingdies'));
+				vid.bitmap.play(Paths.video('luigifuckingdies'));
 				vid.cameras = [camOther];
 				vid.visible = false;
 				add(vid);
-				vid.finishCallback = function()
-					{
-						vid.destroy();
-					}
+				vid.bitmap.onEndReached.add(function(){
+					vid.bitmap.dispose();
+					vid.destroy();
+				});
 
 			case 'piracy':
 				//hasDownScroll = true;
@@ -5832,6 +5831,10 @@ class PlayState extends MusicBeatState
 				luigidies.blend = MULTIPLY;
 
 				luigidies.scale.set(2, 2);
+				luigidies.bitmap.onEndReached.add(function(){
+					luigidies.bitmap.dispose();
+					// luigidies.destroy();
+				});
 				add(luigidies);
 			case 'realbg':
 					enemyY = dad.y;
@@ -6178,29 +6181,25 @@ class PlayState extends MusicBeatState
 			inCutscene = true;
 			cutVid = new VideoSprite();
 			cutVid.scrollFactor.set(0, 0);
-			cutVid.playVideo(Paths.video(name));
+			cutVid.play(Paths.video(name));
 			cutVid.cameras = [camOther];
 			add(cutVid);
 			cancelFadeTween();
 			CustomFadeTransition.nextCamera = null;
 
 			if(SONG.song.toLowerCase() == 'demise'){
-				cutVid.finishCallback = function()
-				{
+				cutVid.bitmap.onEndReached.add(function(){
+					cutVid.bitmap.dispose();
 					remove(cutVid);
 					camHUD.flash(FlxColor.RED, 2);
-				}
+				});
 				eventTimers.push(new FlxTimer().start(0.32, function(tmr:FlxTimer)
 				{
 					startCountdown();
 				}));				
 			}
-			else{
-				cutVid.finishCallback = function()
-				{
-					finishVideo();
-				}
-			}
+			else
+				cutVid.bitmap.onEndReached.add(finishVideo);
 
 			if(SONG.song.toLowerCase() == 'abandoned'){
 				new FlxTimer().start(18.4, function(tmr:FlxTimer)
@@ -6211,6 +6210,7 @@ class PlayState extends MusicBeatState
 	}
 
 	public function finishVideo():Void{
+		cutVid.bitmap.dispose();
 		remove(cutVid);
 		if(SONG.song.toLowerCase() != 'abandoned'){
 			if (endingSong)
@@ -11151,12 +11151,12 @@ class PlayState extends MusicBeatState
 						if(ClientPrefs.filtro85) eventTweens.push(FlxTween.tween(estatica, {alpha: 1}, 2.5));
 					case 7:
 						midsongVid.visible = true;
-						midsongVid.playVideo(Paths.video('powerdownscene'));
-						midsongVid.finishCallback = function()
-						{
+						midsongVid.bitmap.play(Paths.video('powerdownscene'));
+						midsongVid.bitmap.onEndReached.add(function(){
+							midsongVid.bitmap.dispose();
 							midsongVid.visible = false;
 							FlxG.camera.flash(FlxColor.RED, 1);
-						}
+						});
 				}
 
 			case 'Triggers Demise':
@@ -16032,7 +16032,7 @@ class PlayState extends MusicBeatState
 				{
 			case 228:
 				luigidies.visible = true;
-				luigidies.playVideo(Paths.video("luigifuckingdies"));
+				luigidies.bitmap.play(Paths.video("luigifuckingdies"));
 				FlxTween.tween(luigidies, {alpha: 0.6}, 2, {ease: FlxEase.quadInOut});
 				case 248:
 				FlxTween.tween(luigidies, {alpha: 0}, 2.2, {ease: FlxEase.quadInOut});
